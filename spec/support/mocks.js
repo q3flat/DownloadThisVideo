@@ -16,12 +16,6 @@ const mockMetrics = () => {
     });
 };
 
-const mockNotifications = () => {
-    mock('../../src/services/notifications', {
-        sendNotification() { return Promise.resolve(); },
-    });
-};
-
 const mockTwitterAPI = () => {
     const tls = require('tls');
     // MITM converts HTTPS requests to HTTP, so we need to do this
@@ -65,6 +59,5 @@ module.exports = {
     mockCache,
     mockMetrics,
     mockTwitterAPI,
-    mockSns,
-    mockNotifications,
+    mockSns
 };

@@ -1,14 +1,17 @@
-service: DownloadThisVideo
+org: patriotsa4
+app: twitter-video-link-extractor
+service: twitter-video-link-extractor
 plugins:
 - serverless-dotenv-plugin
 - serverless-plugin-aws-alerts
 
 provider:
   name: aws
+  region: eu-central-1
   runtime: nodejs10.x
   stage: beta
-  memorySize: 128
-  timeout: 100
+  memorySize: 512
+  timeout: 15
   logRetentionInDays: 30
   iamRoleStatements:
     - Effect: Allow
@@ -17,11 +20,16 @@ provider:
       Resource:
         - "Fn::Join":
           - ':'
-          - - "arn:aws:sns:us-east-1"
+          - - "arn:aws:sns:eu-central-1"
             - Ref: AWS::AccountId
             - "newMention"
     - Effect: Allow
       Action:
+        - ec2:DescribeNetworkInterfaces
+        - ec2:CreateNetworkInterface
+        - ec2:DeleteNetworkInterface
+        - ec2:DescribeInstances
+        - ec2:AttachNetworkInterface"
         - cloudwatch:PutMetricData
       Resource:
         - "*"
@@ -32,19 +40,17 @@ provider:
     TWITTER_ACCESS_TOKEN: ${env:TWITTER_ACCESS_TOKEN}
     TWITTER_ACCESS_TOKEN_SECRET: ${env:TWITTER_ACCESS_TOKEN_SECRET}
     TWITTER_CALLBACK_URL: ${env:TWITTER_CALLBACK_URL}
-    REDIS_HOSTNAME: ${env:REDIS_HOSTNAME}
-    REDIS_PORT: ${env:REDIS_PORT}
+    REDIS_URL: ${env:REDIS_URL}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
     TWITTER_SCREEN_NAME: ${env:TWITTER_SCREEN_NAME}
     EXTERNAL_URL: ${env:EXTERNAL_URL}
-    FIREBASE_PROJECT_ID: ${env:FIREBASE_PROJECT_ID}
     GTAG_ID: ${env:GTAG_ID}
     AD_CODE: ${env:AD_CODE}
     TOPIC_ARN:
       "Fn::Join":
       - ':'
       -
-        - "arn:aws:sns:us-east-1"
+        - "arn:aws:sns:eu-central-1"
         - Ref: AWS::AccountId
         - "newMention"
 
@@ -65,8 +71,13 @@ package:
 functions:
   fetchTweetsToDownload:
     handler: handler.fetchTweetsToDownload
-    events:
-    - schedule: rate(1 minute)
+    vpc:
+      securityGroupIds:
+        - sg-c0ac1fb8
+      subnetIds:
+        - subnet-12139078
+    #events:
+    #- schedule: rate(100 minute)
     alarms:
     - functionErrors
     - name: functionDuration
@@ -77,6 +88,11 @@ functions:
 
   sendDownloadLink:
     handler: handler.sendDownloadLink
+    vpc:
+      securityGroupIds:
+        - sg-c0ac1fb8
+      subnetIds:
+        - subnet-12139078
     events:
     - sns: newMention
     alarms:
@@ -104,42 +120,42 @@ functions:
                 action: false
                 fbtoken: false
 
-  page:
-    handler: handler.page
-    events:
-      - http:
-          path: /p/{page}
-          method: get
-          request:
-            parameters:
-              paths:
-                page: true
+  #page:
+  #  handler: handler.page
+  #  events:
+  #    - http:
+  #        path: /p/{page}
+  #        method: get
+  #        request:
+  #          parameters:
+  #            paths:
+  #              page: true
 
-  getDownloadsOrStaticFiles:
-    handler: handler.getDownloadsOrStaticFiles
-    events:
-    - http:
-        path: /{username}
-        method: get
-        request:
-          parameters:
-            paths:
-              username: true
-    alarms:
-    - functionErrors
-    - name: functionDuration
-      threshold: 2000
+  #getDownloadsOrStaticFiles:
+  #  handler: handler.getDownloadsOrStaticFiles
+  #  events:
+  #  - http:
+  #      path: /{username}
+  #      method: get
+  #      request:
+  #        parameters:
+  #          paths:
+  #            username: true
+  #  alarms:
+  #  - functionErrors
+  #  - name: functionDuration
+  #    threshold: 2000
 
-  getHomePage:
-    handler: handler.getHomePage
-    events:
-    - http:
-        path: /
-        method: get
-    alarms:
-    - functionErrors
-    - name: functionDuration
-      threshold: 1000
+  #getHomePage:
+  #  handler: handler.getHomePage
+  #  events:
+  #  - http:
+  #      path: /
+  #      method: get
+  #  alarms:
+  #  - functionErrors
+  #  - name: functionDuration
+  #    threshold: 1000
 
 custom:
   alerts:
@@ -161,4 +177,4 @@ custom:
         topic: ${self:service}-dev-alerts-alarm
         notifications:
         - protocol: email
-          endpoint: shalvah.adebayo+awsalerts@gmail.com
+          endpoint: fehervalentin@gmail.com

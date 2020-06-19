@@ -2,21 +2,18 @@
 
 const { get, findItemWithGreatest, SUCCESS, FAIL, UNCERTAIN } = require('../utils');
 const { ExternalPublisherError, NoVideoInTweet } = require('../errors');
-const { sendNotification } = require('../services/notifications');
 
 const isTweetAReply = (tweet) => !!tweet.in_reply_to_status_id_str;
 
 const isTweetAReplyToMe = (tweet) => tweet.in_reply_to_screen_name === process.env.TWITTER_SCREEN_NAME;
 
-const haveIRepliedToTweetAlready = (tweetId, myTweets) => {
-    return !!myTweets.find(t => t === tweetId);
-};
-
 const extractVideoLink = async (tweetObject, { cache, twitter }) => {
+    console.log('Extracting video link...');
     let cachedLink = await cache.getAsync(`tweet-${tweetObject.id_str}`);
     if (cachedLink) {
         return cachedLink;
     }
+    console.log('There is no link in the cache. Looking for embedded media...');
 
     // recursively check for a  link
     function lookForLink(object) {
@@ -37,12 +34,14 @@ const extractVideoLink = async (tweetObject, { cache, twitter }) => {
 
     try {
         // the direct path
-        const variants =  tweetObject.extended_entities.media[0].video_info
-            .variants.filter(variant => variant.content_type === 'video/mp4');
+        const variants = tweetObject.extended_entities.media[0].video_info.variants.filter(variant => variant.content_type === 'video/mp4');
         return findItemWithGreatest('bitrate', variants).url;
     } catch (e) {
+        console.error(e);
         let additionalMediaInfo = get(tweetObject, 'extended_entities.media.0.additional_media_info');
+        console.log('Additional media info: ' + additionalMediaInfo);
         if (additionalMediaInfo && !additionalMediaInfo.embeddable) {
+            console.log('custom publisher?');
             // a custom publisher? not much we can do about it
             // see https://developer.twitter.com/en/docs/tweets/data-dictionary/overview/extended-entities-object.html
             // We'll still try our best, though
@@ -56,6 +55,7 @@ const extractVideoLink = async (tweetObject, { cache, twitter }) => {
             // sometimes, the tweet is a share of another tweet containing media
             // example: https://twitter.com/GalacticoHD/status/889023844991807489
             let expandedUrl = tweetObject.entities.media[0].expanded_url.split('/');
+            console.log('expandedUrl: ' + expandedUrl);
             let tweetId = expandedUrl[expandedUrl.length - 3];
             if (tweetId !== tweetObject.id_str) {
                 return await twitter.fetchTweet(tweetId)
@@ -92,8 +92,7 @@ const handleTweetProcessingSuccess = (tweet, link, { cache, twitter }) => {
     return Promise.all([
         cache.setAsync(`tweet-${tweet.referencing_tweet}`, link, 'EX', 7 * 24 * 60 * 60),
         updateUserDownloads(tweet, link, cache),
-        twitter.replyWithRedirect(tweet),
-        sendNotification(tweet.author.toLowerCase(), cache),
+        twitter.replyWithRedirect(tweet, link)
     ]).then(() => SUCCESS);
 };
 
@@ -125,7 +124,6 @@ const getUserDownloads = async (cache, username) => {
 module.exports = {
     isTweetAReply,
     isTweetAReplyToMe,
-    haveIRepliedToTweetAlready,
     extractVideoLink,
     handleTweetProcessingError,
     handleTweetProcessingSuccess,

@@ -3,7 +3,8 @@
 const redis = require("redis");
 require('bluebird').promisifyAll(redis.RedisClient.prototype);
 
-let client = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOSTNAME, {
+let client = redis.createClient({
+    url: process.env.REDIS_URL,
     no_ready_check: true,
     retry_strategy: (options) => {
         console.log('retrying');
@@ -26,6 +27,5 @@ let client = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOSTNA
         return 1500;
     }
 });
-client.authAsync(process.env.REDIS_PASSWORD);
-
+//client.authAsync(process.env.REDIS_PASSWORD);
 module.exports = client;

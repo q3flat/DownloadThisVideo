@@ -32,3 +32,9 @@ Renders the homepage 😁. See http://thisvid.space.
 
 #### retryFailedTasks
 This re-publishes failed tasks (stored in Redis) as a new SNS message. For now, it can only be triggered manually.
+
+This bot is actually a fork of the https://twitter.com/this_vid. It has a publicly available source code that is free of use. I have a customer who wants this bot use with various languages. I have to extend its functionality.
+
+My bot will analyze only specific tweets. If the bot mentioned under a tweet, then the bot will parse the original tweet in order to produce download links to the mentioners.
+
+Yes, the bot retweet with the download link of the video from the original tweet....................

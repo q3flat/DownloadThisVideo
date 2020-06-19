@@ -7,7 +7,6 @@ const {
     randomSuccessResponse,
 } = require('../utils');
 const {
-    haveIRepliedToTweetAlready,
     isTweetAReplyToMe,
     isTweetAReply
 } = require('./tweet_operations');
@@ -19,7 +18,8 @@ const t = new Twit({
     consumer_key: process.env.TWITTER_CONSUMER_KEY,
     consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
     access_token: process.env.TWITTER_ACCESS_TOKEN,
-    access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
+    access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
+    timeout_ms: 7*1000
 });
 
 module.exports = (cache) => {
@@ -79,34 +79,14 @@ module.exports = (cache) => {
             })
     };
 
-    const replyWithRedirect = async (tweet) => {
+    const replyWithRedirect = async (tweet, link) => {
         let noReply = await cache.getAsync('no-reply');
         if (noReply == 1) {
             return true;
         }
 
-        let content = randomSuccessResponse(tweet.author);
+        let content = randomSuccessResponse(tweet.author, link);
         return reply(tweet, content);
-    };
-
-    const getMyTweets = async () => {
-        let myTweets = await cache.lrangeAsync('myTweets', 0, -1);
-        if (myTweets.length) {
-            return myTweets;
-        }
-
-        return t.get(`statuses/user_timeline`, {
-            screen_name: process.env.TWITTER_SCREEN_NAME,
-            include_rts: false,
-            count: 200,
-        }).then(r => {
-            myTweets = r.data.map(t => t.in_reply_to_status_id_str);
-            return cache.lpushAsync('myTweets', myTweets)
-        }).then(() => myTweets);
-    };
-
-    const shouldDownloadVid = async ({id}) => {
-        return not(haveIRepliedToTweetAlready)(id, await getMyTweets());
     };
 
     const fetchTweet = (tweetId) => {
@@ -121,7 +101,6 @@ module.exports = (cache) => {
         getMentions,
         reply,
         replyWithRedirect,
-        shouldDownloadVid,
         getActualTweetsReferenced,
         fetchTweet,
     };

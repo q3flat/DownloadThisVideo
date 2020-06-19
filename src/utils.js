@@ -100,17 +100,17 @@ const finish = (cache = null) => {
     }
 };
 
-const randomSuccessResponse = (username) => {
+const randomSuccessResponse = (username, link) => {
     let responses = [
-        `Yay, video! Your download link's at {link}. You can bookmark this link and check it whenever you make a new download request. Got questions? See ${process.env.EXTERNAL_URL}/p/faq. 🤗`,
-        `Hey, hey, here's your download link: {link}. I may not always reply to you, so check that link whenever you make a new download request. Check out ${process.env.EXTERNAL_URL}/p/faq if you've got any questions.🤗`,
-        `All done, boss! Your download link: {link}. Psst...your new downloads will always be there, even when I don't reply. See ${process.env.EXTERNAL_URL}/p/faq if you've got any questions.👍`,
-        `You're all set! Your new video's at {link}. PS: you can bookmark that link and check it in future whenever you mention me. See you around.🤗`,
+        `Yay, video! Your download link's at {link}.`,
+        `Hey, hey, here's your download link: {link}.`,
+        `All done, boss! Your download link: {link}.`,
+        `You're all set! Your new video's at {link}.`,
         `I've got you, boss. Your download's at {link}.\n\nPsst...you're awesome!🤗`,
         `All good, my friend! One new download for you at {link}. Enjoy your day!😁`,
     ];
     let response = responses.random();
-    return response.replace('{link}', `http://${process.env.EXTERNAL_URL}/${username}`);
+    return response.replace('{link}', link);
 };
 
 const getRelativeTime = (time) => {
