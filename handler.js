@@ -62,8 +62,10 @@ module.exports.retryFailedTasks = async (event, context) => {
     return finish().success(`Sent ${tweets.length} tasks for retrying`);
 };
 
-/*module.exports.getDownloadsOrStaticFiles = async (event, context) => {
-    let username = event.pathParameters.username;
+module.exports.getDownloadsOrStaticFiles = async (event, context) => {
+    console.log("event");
+    console.log(event);
+    let username = event.username;
     username = typeof username == "string" ? username.replace(/\/$/, '') : username;
     switch (username) {
         case 'ads.txt':
@@ -87,12 +89,19 @@ module.exports.retryFailedTasks = async (event, context) => {
             };
             downloads = downloads.map(prepareDownloadforFrontend);
 
-            return finish().render('downloads', {username, downloads, settings});
+            console.log("downloads");
+            console.log(downloads);
+            //let renderResult = finish().render('downloads', {username, downloads, settings});
+            const response = {
+              statusCode: 200,
+              body: downloads
+            };
+            return response;
         }
     }
-};*/
+};
 
-/*module.exports.page = async (event, context) => {
+module.exports.page = async (event, context) => {
     let page = event.pathParameters.page;
     switch (page) {
         case 'faqs':
@@ -101,11 +110,11 @@ module.exports.retryFailedTasks = async (event, context) => {
             return finish().render('faq', {faqs});
         }
     }
-};*/
+};
 
-/*module.exports.getHomePage = async (event, context) => {
+module.exports.getHomePage = async (event, context) => {
     return finish().render('home');
-};*/
+};
 
 module.exports.startTwitterSignIn = async (event, context) => {
     console.log({ event });

@@ -11,7 +11,7 @@ provider:
   runtime: nodejs10.x
   stage: beta
   memorySize: 512
-  timeout: 15
+  timeout: 6
   logRetentionInDays: 30
   iamRoleStatements:
     - Effect: Allow
@@ -76,8 +76,8 @@ functions:
         - sg-c0ac1fb8
       subnetIds:
         - subnet-12139078
-    #events:
-    #- schedule: rate(100 minute)
+    events:
+    - schedule: rate(1 minute)
     alarms:
     - functionErrors
     - name: functionDuration
@@ -120,42 +120,57 @@ functions:
                 action: false
                 fbtoken: false
 
-  #page:
-  #  handler: handler.page
-  #  events:
-  #    - http:
-  #        path: /p/{page}
-  #        method: get
-  #        request:
-  #          parameters:
-  #            paths:
-  #              page: true
+  page:
+    handler: handler.page
+    vpc:
+      securityGroupIds:
+        - sg-c0ac1fb8
+      subnetIds:
+        - subnet-12139078
+    events:
+      - http:
+          path: /p/{page}
+          method: get
+          request:
+            parameters:
+              paths:
+                page: true
 
-  #getDownloadsOrStaticFiles:
-  #  handler: handler.getDownloadsOrStaticFiles
-  #  events:
-  #  - http:
-  #      path: /{username}
-  #      method: get
-  #      request:
-  #        parameters:
-  #          paths:
-  #            username: true
-  #  alarms:
-  #  - functionErrors
-  #  - name: functionDuration
-  #    threshold: 2000
+  getDownloadsOrStaticFiles:
+    handler: handler.getDownloadsOrStaticFiles
+    vpc:
+      securityGroupIds:
+        - sg-c0ac1fb8
+      subnetIds:
+        - subnet-12139078
+    #events:
+    #  - http:
+    #      path: /{username}
+    #      method: get
+    #      request:
+    #        parameters:
+    #          paths:
+    #            username: true
+    alarms:
+    - functionErrors
+    - name: functionDuration
+      threshold: 2000
 
-  #getHomePage:
-  #  handler: handler.getHomePage
-  #  events:
-  #  - http:
-  #      path: /
-  #      method: get
-  #  alarms:
-  #  - functionErrors
-  #  - name: functionDuration
-  #    threshold: 1000
+  getHomePage:
+    handler: handler.getHomePage
+    vpc:
+      securityGroupIds:
+        - sg-c0ac1fb8
+      subnetIds:
+        - subnet-12139078
+    events:
+    - http:
+        path: /
+        method: get
+    alarms:
+    - functionErrors
+    - name: functionDuration
+      threshold: 1000
 
 custom:
   alerts:

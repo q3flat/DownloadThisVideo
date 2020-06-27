@@ -101,16 +101,18 @@ const finish = (cache = null) => {
 };
 
 const randomSuccessResponse = (username, link) => {
+    username = username.toLowerCase();
+    let userHistoryLink = process.env.EXTERNAL_URL + '?username=' + username;
     let responses = [
-        `Yay, video! Your download link's at {link}.`,
-        `Hey, hey, here's your download link: {link}.`,
-        `All done, boss! Your download link: {link}.`,
-        `You're all set! Your new video's at {link}.`,
-        `I've got you, boss. Your download's at {link}.\n\nPsst...you're awesome!🤗`,
-        `All good, my friend! One new download for you at {link}. Enjoy your day!😁`,
+        `يا مرحبا تفضل رابط التحميل {userHistoryLink}.`,
+        `مرحبتين هذا رابط التحميل: {userHistoryLink}.`,
+        `ابشر هذا رابط التحميل : {userHistoryLink}.`,
+        `تفضل رابط الفديو اللي طلبته {userHistoryLink}.`,
+        `طلبك جاهز هذا الرابط {userHistoryLink}.`,
+        `ابشر ياذيبان هذا رابط الفديو {userHistoryLink}. استمتع بيومك!😁`,
     ];
     let response = responses.random();
-    return response.replace('{link}', link);
+    return response.replace('{userHistoryLink}', userHistoryLink);
 };
 
 const getRelativeTime = (time) => {
